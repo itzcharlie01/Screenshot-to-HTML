@@ -1,131 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.13/html-to-image.min.js" integrity="sha512-iZ2ORl595Wx6miw+GuadDet4WQbdSWS3JLMoNfY8cRGoEFy6oT3G9IbcrBeL6AfkgpA51ETt/faX6yLV+/gFJg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script>
-      (function() {
-        const originalConsole = window.console;
-        window.console = {
-          log: (...args) => {
-            originalConsole.log(...args);
-            window.parent.postMessage({ type: 'console', message: args.join(' ') }, '*');
-          },
-          error: (...args) => {
-            originalConsole.error(...args);
-            window.parent.postMessage({ type: 'console', message: 'Error: ' + args.join(' ') }, '*');
-          },
-          warn: (...args) => {
-            originalConsole.warn(...args);
-            window.parent.postMessage({ type: 'console', message: 'Warning: ' + args.join(' ') }, '*');
-          }
-        };
-
-        let requestId = 0;
-        let callbacksMap = new Map();
-        window.claude = {
-          complete: (prompt) => {
-            return new Promise((resolve, reject) => {
-              const id = requestId++;
-              callbacksMap.set(id, { resolve, reject });
-              window.parent.postMessage({ type: 'claudeComplete', id, prompt }, '*');
-            });
-          }
-        };
-
-        // Override global fetch
-        window.fetch = (url, init = {}) => {
-          return new Promise((resolve, reject) => {
-            const id = requestId++;
-            callbacksMap.set(id, { resolve, reject });
-            window.parent.postMessage({
-              type: 'proxyFetch',
-              id,
-              url,
-              init,
-            }, '*');
-          });
-        };
-
-        window.addEventListener('message', async (event) => {
-          if (event.data.type === 'takeScreenshot') {
-            const rootElement = document.getElementById('artifacts-component-root-html');
-            if (!rootElement) {
-              window.parent.postMessage({
-                type: 'screenshotError',
-                error: new Error('Root element not found'),
-              }, '*');
-            }
-            const screenshot = await htmlToImage.toPng(rootElement, {
-              imagePlaceholder:
-                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjePDgwX8ACOQDoNsk0PMAAAAASUVORK5CYII=",
-            });
-            window.parent.postMessage({
-              type: 'screenshotData',
-              data: screenshot,
-            }, '*');
-          } else if (event.data.type === 'claudeComplete') {
-            const callback = callbacksMap.get(event.data.id);
-            if (event.data.error) {
-              callback.reject(new Error(event.data.error));
-            } else {
-              callback.resolve(event.data.completion);
-            }
-            callbacksMap.delete(event.data.id);
-          } else if (event.data.type === 'proxyFetchResponse') {
-            const callback = callbacksMap.get(event.data.id);
-            if (event.data.error) {
-              callback.reject(new Error(event.data.error));
-            } else {
-              callback.resolve(new Response(event.data.body, {
-                status: event.data.status,
-                statusText: event.data.statusText,
-                headers: event.data.headers
-              }));
-            }
-            callbacksMap.delete(event.data.id);
-          }
-        });
-
-        window.addEventListener('click', (event) => {
-          const isEl = event.target instanceof HTMLElement;
-          if (!isEl) return;
-    
-          // find ancestor links
-          const linkEl = event.target.closest("a");
-          if (!linkEl || !linkEl.href) return;
-    
-          event.preventDefault();
-          event.stopImmediatePropagation();
-    
-          let linkUrl;
-          try {
-            linkUrl = new URL(linkEl.href);
-          } catch (error) {
-            return;
-          }
-    
-          if (linkUrl.hostname === window.location.hostname) return;
-    
-          window.parent.postMessage({
-            type: 'openExternal',
-            href: linkEl.href,
-          }, '*');
-      });
-
-        const originalOpen = window.open;
-        window.open = function (url) {
-          window.parent.postMessage({
-            type: "openExternal",
-            href: url,
-          }, "*");
-        };
-
-        window.addEventListener('error', (event) => {
-          window.parent.postMessage({ type: 'console', message: 'Uncaught Error: ' + event.message }, '*');
-        });
-      })();
-    </script>
-  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Screenshot to HTML Builder</title>
@@ -138,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 50%, #ea4335 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -153,7 +28,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
+            background: linear-gradient(135deg, #1a73e8, #4285f4);
             color: white;
             padding: 30px;
             text-align: center;
@@ -184,7 +59,7 @@
             padding: 20px;
             background: #f8f9fa;
             border-radius: 10px;
-            border-left: 4px solid #3498db;
+            border-left: 4px solid #4285f4;
         }
 
         .api-key-input {
@@ -198,7 +73,7 @@
 
         .api-key-input:focus {
             outline: none;
-            border-color: #3498db;
+            border-color: #4285f4;
         }
 
         .upload-area {
@@ -213,13 +88,13 @@
         }
 
         .upload-area:hover {
-            border-color: #3498db;
+            border-color: #4285f4;
             background: #f0f8ff;
             transform: translateY(-2px);
         }
 
         .upload-area.dragover {
-            border-color: #2ecc71;
+            border-color: #34a853;
             background: #f0fff0;
         }
 
@@ -257,7 +132,7 @@
         }
 
         .generate-btn {
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background: linear-gradient(135deg, #4285f4, #1a73e8);
             color: white;
             border: none;
             padding: 15px 40px;
@@ -265,12 +140,12 @@
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
         }
 
         .generate-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.4);
         }
 
         .generate-btn:disabled {
@@ -288,7 +163,7 @@
 
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+            border-top: 4px solid #4285f4;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -323,8 +198,8 @@
         }
 
         .tab.active {
-            border-bottom-color: #3498db;
-            color: #3498db;
+            border-bottom-color: #4285f4;
+            color: #4285f4;
             font-weight: 600;
         }
 
@@ -338,13 +213,13 @@
 
         .code-container {
             position: relative;
-            background: #2c3e50;
+            background: #1e1e1e;
             border-radius: 10px;
             overflow: hidden;
         }
 
         .code-header {
-            background: #34495e;
+            background: #2d2d2d;
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
@@ -357,7 +232,7 @@
         }
 
         .copy-btn {
-            background: #3498db;
+            background: #4285f4;
             color: white;
             border: none;
             padding: 8px 15px;
@@ -368,12 +243,12 @@
         }
 
         .copy-btn:hover {
-            background: #2980b9;
+            background: #1a73e8;
         }
 
         .code-content {
             padding: 20px;
-            color: #ecf0f1;
+            color: #d4d4d4;
             font-family: 'Monaco', 'Menlo', monospace;
             font-size: 14px;
             line-height: 1.6;
@@ -391,18 +266,18 @@
         }
 
         .error {
-            background: #fff5f5;
-            border: 1px solid #fed7d7;
-            color: #c53030;
+            background: #fce8e6;
+            border: 1px solid #ea4335;
+            color: #d93025;
             padding: 15px;
             border-radius: 10px;
             margin: 20px 0;
         }
 
         .success {
-            background: #f0fff4;
-            border: 1px solid #9ae6b4;
-            color: #276749;
+            background: #e6f4ea;
+            border: 1px solid #34a853;
+            color: #137333;
             padding: 15px;
             border-radius: 10px;
             margin: 20px 0;
@@ -423,19 +298,20 @@
         }
     </style>
 </head>
-<body id="artifacts-component-root-html">
+<body>
     <div class="container">
         <div class="header">
             <h1>🎨 Screenshot to HTML</h1>
-            <p>Transform your UI screenshots into clean HTML code using AI</p>
+            <p>Transform your UI screenshots into clean HTML code using Google Gemini AI</p>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;">Made with ❤️ by Charles Ayere</p>
         </div>
 
         <div class="main-content">
             <!-- API Key Section -->
             <div class="api-key-section">
-                <h3>🔑 OpenAI API Key</h3>
-                <p>Enter your OpenAI API key to get started. <a href="https://platform.openai.com/api-keys" target="_blank">Get one here</a></p>
-                <input type="password" id="apiKey" class="api-key-input" placeholder="sk-...">
+                <h3>🔑 Google AI API Key</h3>
+                <p>Enter your Google AI Studio API key to get started. <a href="https://aistudio.google.com/app/apikey" target="_blank">Get one here for free</a></p>
+                <input type="password" id="apiKey" class="api-key-input" placeholder="AIza...">
             </div>
 
             <!-- Upload Section -->
@@ -453,13 +329,13 @@
                 <h3>Preview:</h3>
                 <img id="previewImage" class="preview-image" alt="Preview">
                 <br><br>
-                <button class="generate-btn" id="generateBtn">✨ Generate HTML</button>
+                <button class="generate-btn" id="generateBtn">✨ Generate HTML with Gemini</button>
             </div>
 
             <!-- Loading -->
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Analyzing screenshot and generating HTML...</p>
+                <p>Analyzing screenshot and generating HTML with Gemini AI...</p>
             </div>
 
             <!-- Results Section -->
@@ -564,7 +440,7 @@
         generateBtn.addEventListener('click', async () => {
             const apiKey = apiKeyInput.value.trim();
             if (!apiKey) {
-                showError('Please enter your OpenAI API key.');
+                showError('Please enter your Google AI API key.');
                 return;
             }
 
@@ -576,7 +452,7 @@
             await generateHTML(apiKey);
         });
 
-        // Generate HTML using OpenAI API
+        // Generate HTML using Gemini API
         async function generateHTML(apiKey) {
             try {
                 showLoading(true);
@@ -584,70 +460,97 @@
 
                 // Convert image to base64
                 const base64Image = await fileToBase64(selectedFile);
+                const base64Data = base64Image.split(',')[1]; // Remove data:image/...;base64, prefix
 
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-4o",
-                        messages: [
+                const requestBody = {
+                    contents: [{
+                        parts: [
                             {
-                                role: "user",
-                                content: [
-                                    {
-                                        type: "text",
-                                        text: `Please analyze this screenshot and generate clean, modern HTML and CSS code that recreates the design. 
+                                text: `Please analyze this screenshot and generate clean, modern HTML and CSS code that recreates the design exactly.
 
 Requirements:
 - Generate semantic HTML with proper structure
 - Include modern CSS with flexbox/grid for layout
-- Use appropriate fonts and spacing
-- Make it responsive
+- Use appropriate fonts and spacing that match the design
+- Make it responsive and mobile-friendly
 - Include hover effects where appropriate
 - Use modern web design practices
-- Separate HTML and CSS clearly
+- Match colors, fonts, and layout as closely as possible
 
 Please provide the response in this exact format:
+
 HTML:
 [HTML code here]
 
 CSS:
-[CSS code here]`
-                                    },
-                                    {
-                                        type: "image_url",
-                                        image_url: {
-                                            url: base64Image
-                                        }
-                                    }
-                                ]
+[CSS code here]
+
+Make sure the code is production-ready and well-formatted.`
+                            },
+                            {
+                                inline_data: {
+                                    mime_type: selectedFile.type,
+                                    data: base64Data
+                                }
                             }
-                        ],
-                        max_tokens: 4000
-                    })
+                        ]
+                    }],
+                    generationConfig: {
+                        temperature: 0.4,
+                        topK: 32,
+                        topP: 1,
+                        maxOutputTokens: 4096,
+                    }
+                };
+
+                console.log('Making request to Gemini API...');
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || `HTTP ${response.status}`);
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const data = await response.json();
-                const generatedCode = data.choices[0].message.content;
+                console.log('Gemini API response:', data);
+                
+                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                    throw new Error('Invalid response format from Gemini API');
+                }
+
+                const generatedCode = data.candidates[0].content.parts[0].text;
 
                 // Parse HTML and CSS from response
                 const { html, css } = parseGeneratedCode(generatedCode);
                 
+                if (!html && !css) {
+                    throw new Error('Could not extract HTML and CSS from the response');
+                }
+                
                 // Display results
                 displayResults(html, css);
-                showSuccess('HTML generated successfully! 🎉');
+                showSuccess('HTML generated successfully with Gemini! 🎉');
 
             } catch (error) {
                 console.error('Error:', error);
-                showError(`Failed to generate HTML: ${error.message}`);
+                let errorMessage = error.message;
+                
+                if (errorMessage.includes('API_KEY_INVALID')) {
+                    errorMessage = 'Invalid API key. Please check your Google AI Studio API key.';
+                } else if (errorMessage.includes('PERMISSION_DENIED')) {
+                    errorMessage = 'Permission denied. Make sure your API key has access to Gemini models.';
+                } else if (errorMessage.includes('QUOTA_EXCEEDED')) {
+                    errorMessage = 'API quota exceeded. Please check your usage limits.';
+                }
+                
+                showError(`Failed to generate HTML: ${errorMessage}`);
             } finally {
                 showLoading(false);
             }
@@ -665,32 +568,62 @@ CSS:
 
         // Parse generated code into HTML and CSS
         function parseGeneratedCode(code) {
+            console.log('Parsing generated code:', code.substring(0, 200) + '...');
+            
             let html = '';
             let css = '';
 
-            const htmlMatch = code.match(/HTML:\s*([\s\S]*?)(?=CSS:|$)/i);
-            const cssMatch = code.match(/CSS:\s*([\s\S]*?)$/i);
+            // Try to extract HTML and CSS using different patterns
+            const patterns = [
+                // Pattern 1: HTML: ... CSS: ...
+                {
+                    html: /HTML:\s*([\s\S]*?)(?=CSS:|$)/i,
+                    css: /CSS:\s*([\s\S]*?)$/i
+                },
+                // Pattern 2: ```html ... ``` ```css ... ```
+                {
+                    html: /```html\s*([\s\S]*?)```/i,
+                    css: /```css\s*([\s\S]*?)```/i
+                },
+                // Pattern 3: <html> ... </html> and any CSS block
+                {
+                    html: /<html[\s\S]*?<\/html>/i,
+                    css: /```css\s*([\s\S]*?)```|CSS:\s*([\s\S]*?)(?=HTML:|$)/i
+                }
+            ];
 
-            if (htmlMatch) {
-                html = htmlMatch[1].trim();
-                // Remove any markdown code fences
-                html = html.replace(/^```html?\s*|\s*```$/gi, '').trim();
+            for (const pattern of patterns) {
+                const htmlMatch = code.match(pattern.html);
+                const cssMatch = code.match(pattern.css);
+
+                if (htmlMatch) {
+                    html = htmlMatch[1] ? htmlMatch[1].trim() : htmlMatch[0].trim();
+                    html = html.replace(/^```html?\s*|\s*```$/gi, '').trim();
+                }
+
+                if (cssMatch) {
+                    css = cssMatch[1] ? cssMatch[1].trim() : (cssMatch[2] ? cssMatch[2].trim() : cssMatch[0].trim());
+                    css = css.replace(/^```css?\s*|\s*```$/gi, '').trim();
+                }
+
+                if (html && css) break;
             }
 
-            if (cssMatch) {
-                css = cssMatch[1].trim();
-                // Remove any markdown code fences
-                css = css.replace(/^```css?\s*|\s*```$/gi, '').trim();
-            }
-
-            // Fallback: if the parsing above didn't work, try to extract from code blocks
-            if (!html && !css) {
+            // Fallback: try to extract any code blocks
+            if (!html || !css) {
                 const codeBlocks = code.match(/```[\s\S]*?```/g);
                 if (codeBlocks && codeBlocks.length >= 2) {
-                    html = codeBlocks[0].replace(/```html?\s*|\s*```/gi, '').trim();
-                    css = codeBlocks[1].replace(/```css?\s*|\s*```/gi, '').trim();
+                    if (!html) {
+                        html = codeBlocks[0].replace(/```html?\s*|\s*```/gi, '').trim();
+                    }
+                    if (!css) {
+                        css = codeBlocks[1].replace(/```css?\s*|\s*```/gi, '').trim();
+                    }
                 }
             }
+
+            console.log('Parsed HTML length:', html.length);
+            console.log('Parsed CSS length:', css.length);
 
             return { html, css };
         }
@@ -754,6 +687,20 @@ ${html}
                 }, 2000);
             }).catch(err => {
                 console.error('Failed to copy: ', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
             });
         }
 
@@ -786,6 +733,9 @@ ${html}
         function clearMessages() {
             document.querySelectorAll('.error, .success').forEach(el => el.remove());
         }
+
+        // Initialize
+        console.log('Screenshot to HTML Builder (Gemini) loaded successfully!');
     </script>
 </body>
 </html>

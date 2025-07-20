@@ -284,6 +284,8 @@ If this project helped you, please:
 ---
 
 <div align="center">
-  Made with ❤️ by Charlie for the developer community  
-  [Demo](https://mydavinci.netlify.app) • [Issues](https://github.com/itzcharlie01/screenshot-to-HTML/issues) • [Contribute](https://github.com/itzcharlie01/screenshot-to-HTML/pulls)
+  <p markdown="1">
+    Made with ❤️ by Charlie for the developer community  
+    [Demo](https://mydavinci.netlify.app) • [Issues](https://github.com/itzcharlie01/screenshot-to-HTML/issues) • [Contribute](https://github.com/itzcharlie01/screenshot-to-HTML/pulls)
+  </p>
 </div>
